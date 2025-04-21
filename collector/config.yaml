@@ -30,10 +30,10 @@ extensions:
     instance_uid: "79850B03-1899-420D-955D-DA2C9DDD60E5" # <-- REPLACE THIS! Generate a UUID.
 
     # Optional: capabilities (Collector reports these automatically, but can be specified)
-    # capabilities:
-    #   accepts_remote_config: true
-    #   reports_effective_config: true
-    #   reports_status: true
+    capabilities:
+      # accepts_remote_config: true
+      reports_effective_config: true
+      # reports_status: true
     #   reports_own_metrics: true # If you plan to send metrics via OpAMP settings
 
 # 3. Enable the components in the service pipeline
@@ -52,3 +52,6 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [debug]
+  telemetry:
+    logs:
+      level: DEBUG

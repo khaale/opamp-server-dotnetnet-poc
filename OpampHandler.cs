@@ -73,6 +73,48 @@ public class OpampHandler
 
                 try
                 {
+
+                    // ---> START ADDED CODE <---
+                    // Check for and potentially skip a leading zero byte
+                    int firstByte = messageStream.ReadByte();
+                    if (firstByte == 0)
+                    {
+                        _logger.LogWarning("Detected and skipped leading 0x00 byte before parsing Protobuf message.");
+                        // The stream position is now advanced past the 0x00.
+                        // If the message ONLY contained 0x00, Length will be 0 after ReadByte advances position past it.
+                        // We need to check the remaining length before parsing.
+                        if (messageStream.Position >= messageStream.Length) // Or just check messageStream.Length == 1 initially
+                        {
+                            _logger.LogWarning("Message contained only the 0x00 byte. Skipping parse.");
+                            continue;
+                        }
+                        // No need to Seek back, ParseFrom will read from the current position (which is after the 0x00)
+                    }
+                    else if (firstByte == -1)
+                    {
+                        // Should not happen if messageStream.Length > 0, but good practice
+                        _logger.LogWarning("Read -1 byte from stream unexpectedly. Skipping parse.");
+                        continue;
+                    }
+                    else
+                    {
+                        // The first byte was not 0, so rewind to include it in parsing
+                        messageStream.Seek(0, SeekOrigin.Begin);
+                        _logger.LogDebug("Leading byte was not 0x00 ({FirstByteHex}), proceeding with normal parse.", firstByte.ToString("X2"));
+                    }
+                    // ---> END ADDED CODE <---
+
+
+                    // Log prefix *after* potentially skipping the zero
+                    if (messageStream.Position < messageStream.Length)
+                    {
+                        long originalPosition = messageStream.Position; // Remember current position
+                        byte[] previewBytes = new byte[Math.Min(messageStream.Length - messageStream.Position, 16)];
+                        await messageStream.ReadAsync(previewBytes, 0, previewBytes.Length);
+                        _logger.LogDebug("Message prefix to be parsed (hex): {Prefix}", BitConverter.ToString(previewBytes).Replace("-",""));
+                        messageStream.Seek(originalPosition, SeekOrigin.Begin); // Reset position after peeking
+                    }
+
                     var agentRequest = AgentToServer.Parser.ParseFrom(messageStream);
 
                     if (agentRequest.InstanceUid == null || agentRequest.InstanceUid.IsEmpty)
