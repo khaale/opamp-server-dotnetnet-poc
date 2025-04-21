@@ -1,0 +1,54 @@
+# config.yaml for OpenTelemetry Collector
+
+# 1. Define necessary receivers, processors, exporters (minimal example)
+receivers:
+  otlp: # Example: receive OTLP data (not strictly needed for OpAMP test)
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch: # Example processor
+
+exporters:
+  debug: # Essential: Logs internal collector activity, including OpAMP!
+    verbosity: detailed # Start with normal, you can increase to detailed if needed
+
+# 2. Define the OpAMP extension
+extensions:
+  opamp:
+    # Server configuration: Point this to YOUR .NET OpAMP server
+    server:
+      ws:
+        endpoint: "ws://host.docker.internal:5270/v1/opamp" # ADJUST if your server runs elsewhere or uses HTTPS/WSS
+        tls: # Add TLS settings if your server uses WSS (HTTPS)
+          insecure: true # Use for self-signed certs during dev ONLY
+        # headers: # Add if your server requires specific headers
+        #   Authorization: "Bearer your_token"
+
+    # Agent identification: MUST provide a unique ID
+    instance_uid: "79850B03-1899-420D-955D-DA2C9DDD60E5" # <-- REPLACE THIS! Generate a UUID.
+
+    # Optional: capabilities (Collector reports these automatically, but can be specified)
+    # capabilities:
+    #   accepts_remote_config: true
+    #   reports_effective_config: true
+    #   reports_status: true
+    #   reports_own_metrics: true # If you plan to send metrics via OpAMP settings
+
+# 3. Enable the components in the service pipeline
+service:
+  extensions: [opamp] # <-- IMPORTANT: Enable the OpAMP extension
+  pipelines:
+    traces: # Example pipeline (adjust based on your needs/testing)
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

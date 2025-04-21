@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework> <!-- Or net7.0, net6.0 -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.25.1" /> <!-- Use latest stable -->
+    <PackageReference Include="Grpc.Tools" Version="2.60.0"> <!-- Use latest stable -->
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" /> <!-- Check compatibility -->
+     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
+ </ItemGroup>
+
+  <ItemGroup>
+    <!-- Add this section for Protobuf generation -->
+    <Protobuf Include="Protos\opamp.proto" GrpcServices="None" ProtoRoot="Protos\" OutputDir="%(RelativeDir)../Generated/" />
+    <Protobuf Include="Protos\anyvalue.proto" GrpcServices="None" ProtoRoot="Protos\" OutputDir="%(RelativeDir)../Generated/" Link="Protos\anyvalue.proto" />
+    <!-- Ensure ProtoRoot points to the directory containing your protos -->
+    <!-- GrpcServices="None" because we are only using the messages, not gRPC services -->
+    <!-- OutputDir specifies where the generated C# files go -->
+  </ItemGroup>
+
+</Project>
